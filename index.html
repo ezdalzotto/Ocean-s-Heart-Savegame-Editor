@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocean's Heart Save Editor</title>
+<style>
+  :root{--bg:#0d1b26;--panel:#13283a;--panel2:#0f2231;--line:#24435c;--text:#e6f0f6;--muted:#8fb0c4;--accent:#3cc6c0;--gold:#f0c45a;--good:#7fe0a8}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  main{max-width:980px;margin:0 auto;padding:18px 16px 40px}
+  .topbar{position:sticky;top:0;z-index:10;background:#0a1620f2;border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+  .topbar-in{max-width:980px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .brand{display:flex;flex-direction:column;line-height:1.25}
+  .brand h1{font-size:20px;margin:0}
+  .brand .by{font-size:12px;color:var(--muted)}
+  .brand .by a,footer a{color:var(--accent);text-decoration:none}
+  .brand .by a:hover,footer a:hover{text-decoration:underline}
+  h1{font-size:23px;margin:0 0 4px}
+  h2{font-size:17px;margin:0 0 4px}
+  h3{font-size:13px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  p.sub{color:var(--muted);margin:0}
+  .lang{display:flex;align-items:center;gap:4px;background:var(--panel);border:2px solid var(--accent);border-radius:999px;padding:3px 3px 3px 10px;flex:none;box-shadow:0 0 0 4px #3cc6c022}
+  .lang .globe{font-size:16px}
+  .lang button{background:transparent;color:var(--text);border-radius:999px;padding:7px 14px;font-size:14px}
+  .lang button.on{background:var(--accent);color:#06222a}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  ol{margin:0;padding-left:20px} li{margin:6px 0}
+  code{background:#0a1520;padding:1px 5px;border-radius:4px;font-size:13px}
+  .path{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 2px}
+  .path code{font-size:14px;padding:6px 10px;border:1px solid var(--line);user-select:all}
+  kbd{background:#20405a;border-radius:4px;padding:1px 6px;font:12px ui-monospace,Consolas,monospace;border-bottom:2px solid #0a1520}
+  .loadhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .guide{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:24px;text-align:center;color:var(--muted);cursor:pointer}
+  .drop.over{border-color:var(--accent);color:var(--text)}
+  .drop b{color:var(--text)}
+  button{background:var(--accent);color:#06222a;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit}
+  button.sec{background:#20405a;color:var(--text)}
+  button.big{background:var(--gold);color:#2a1d00;font-size:16px;padding:12px 20px}
+  button.small{padding:5px 10px;font-size:13px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--muted);font-size:13px}
+  input[type=text],input[type=number],select{background:#0a1520;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:14px}
+  input[type=number]{width:96px}
+  .tabs{display:flex;gap:4px;margin-bottom:-1px;flex-wrap:wrap}
+  .tab{background:transparent;color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:10px 10px 0 0;padding:9px 14px}
+  .tab.on{background:var(--panel);color:var(--text);border-color:var(--line)}
+  .pane{border-top-left-radius:0}
+  .cheats{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+  .cheat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+  .cheat.on{border-color:var(--good);background:#10302a}
+  .cheat .ico{font-size:24px;line-height:1}
+  .cheat b{display:block}
+  .cheat span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+  .cheat .state{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .cheat.on .state{color:var(--good)}
+  .cheat.na{opacity:.45;cursor:default}
+  .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px}
+  .item{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:10px}
+  .item .txt{flex:1;min-width:0}
+  .item b{display:block;font-size:14px}
+  .item span{display:block;color:var(--muted);font-size:12px}
+  .item.changed,.vrow.changed{border-color:var(--gold)}
+  .item.missing{opacity:.6}
+  .toggle{appearance:none;-webkit-appearance:none;width:40px;height:22px;background:#2b4a63;border-radius:11px;position:relative;cursor:pointer;flex:none;border:0;margin:0}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#cfe1ec;transition:.15s}
+  .toggle:checked{background:var(--good)} .toggle:checked::after{left:21px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 4px}
+  .chip{background:#1a3448;color:var(--text);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
+  .chip.on{background:var(--accent);color:#06222a;border-color:var(--accent)}
+  .chip small{opacity:.7;font-weight:500}
+  .rows{display:flex;flex-direction:column;gap:6px}
+  .vrow{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 11px;display:flex;align-items:center;gap:12px}
+  .vrow .txt{flex:1;min-width:0}
+  .vrow b{font-size:14px}
+  .vrow .hint{display:block;color:var(--muted);font-size:12.5px}
+  .vrow .tech{display:block;color:#5f8299;font:11px ui-monospace,Consolas,monospace;word-break:break-all}
+  .vrow .ctl{flex:none;display:flex;align-items:center;gap:6px}
+  .vrow .ctl input[type=text]{width:180px}
+  .place{display:inline-block;background:#1d3a50;color:#bfe0f0;border-radius:5px;padding:0 6px;font-size:11.5px;margin-left:6px;vertical-align:1px}
+  .yn{font-size:12px;color:var(--muted);min-width:26px;text-align:right}
+  .msg{padding:9px 12px;border-radius:8px;margin-top:10px;font-size:14px}
+  .msg.ok{background:#123a33;color:#9fe8cf}
+  .msg.err{background:#3a1a17;color:#ffc2b8}
+  .msg.warn{background:#3a3016;color:#ffe2a6}
+  textarea{width:100%;height:160px;background:#0a1520;color:var(--text);border:1px solid var(--line);border-radius:6px;font:12px ui-monospace,Consolas,monospace;padding:8px}
+  .hidden{display:none!important}
+  .sticky{position:sticky;bottom:0;z-index:5;background:#0b1822ee;border:1px solid var(--line);border-radius:12px;padding:12px 16px;backdrop-filter:blur(4px)}
+  footer{color:#5f8299;font-size:12px;text-align:center;margin-top:24px}
+  details summary{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <div class="brand">
+    <h1>🌊 <span data-i18n="title"></span></h1>
+    <span class="by"><span data-i18n="by"></span> <a href="https://github.com/ezdalzotto" target="_blank" rel="noopener">Ernani Zanandrea Dalzotto</a></span>
+  </div>
+  <div class="lang" role="group" aria-label="Language">
+    <span class="globe">🌐</span>
+    <button data-lang="en">🇺🇸 English</button>
+    <button data-lang="pt">🇧🇷 Português</button>
+  </div>
+</div></div>
+<main>
+  <p class="sub" style="margin-bottom:14px" data-i18n="subtitle"></p>
+
+  <div class="card">
+    <div class="loadhead">
+      <h2 style="margin:0" data-i18n="loadTitle"></h2>
+      <button class="sec" id="guideBtn" aria-expanded="false"></button>
+    </div>
+    <div class="guide hidden" id="guide">
+      <h2 data-i18n="howTitle"></h2>
+      <ol>
+        <li data-i18n="step1"></li>
+        <li><span data-i18n="step2"></span>
+          <div class="path"><code id="savePath">%APPDATA%\OceansHeart\oceans_heart_saves</code><button class="sec small" id="copyPath" data-i18n="copyPath"></button></div>
+          <div class="muted" data-i18n="step2b"></div>
+        </li>
+        <li data-i18n="step3"></li>
+        <li data-i18n="step4"></li>
+      </ol>
+    </div>
+    <div id="drop" class="drop" data-i18n="drop"></div>
+    <input id="file" type="file" accept=".dat,.txt,text/plain" class="hidden">
+    <div class="muted" style="margin-top:8px" data-i18n="dropTip"></div>
+    <details style="margin-top:8px"><summary class="muted" data-i18n="pasteSummary"></summary>
+      <textarea id="paste"></textarea>
+      <div class="row" style="margin-top:6px"><button class="sec" id="loadPaste" data-i18n="pasteLoad"></button></div>
+    </details>
+    <div id="loadMsg"></div>
+  </div>
+
+  <div id="editor" class="hidden">
+    <div class="tabs">
+      <button class="tab on" data-tab="cheats" data-i18n="tabCheats"></button>
+      <button class="tab" data-tab="status" data-i18n="tabStatus"></button>
+      <button class="tab" data-tab="items" data-i18n="tabItems"></button>
+      <button class="tab" data-tab="world" data-i18n="tabWorld"></button>
+      <button class="tab" data-tab="quests" data-i18n="tabQuests"></button>
+      <button class="tab" data-tab="adv" data-i18n="tabSearch"></button>
+    </div>
+
+    <div class="card pane" id="tab-cheats">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <div><h2 data-i18n="cheatsTitle"></h2><div class="muted" data-i18n="cheatsSub"></div></div>
+        <button class="big" id="godmode" data-i18n="godmode"></button>
+      </div>
+      <div class="cheats" id="cheats"></div>
+      <div class="msg warn" style="margin-top:14px" data-i18n="cheatsNote"></div>
+    </div>
+
+    <div class="card pane hidden" id="tab-status">
+      <h2 data-i18n="statusTitle"></h2>
+      <div class="muted" style="margin-bottom:10px" data-i18n="statusSub"></div>
+      <div class="list" id="statusList"></div>
+    </div>
+
+    <div class="card pane hidden" id="tab-items">
+      <div class="row" style="justify-content:space-between">
+        <h2 data-i18n="itemsTitle"></h2>
+        <input type="text" id="itemSearch" data-i18n-ph="itemsSearch">
+      </div>
+      <div class="muted" data-i18n="itemsSub"></div>
+      <div id="itemGroups"></div>
+    </div>
+
+    <div class="card pane hidden" id="tab-world">
+      <div class="row" style="justify-content:space-between">
+        <h2 data-i18n="worldTitle"></h2>
+        <input type="text" id="worldSearch" data-i18n-ph="worldSearch">
+      </div>
+      <div class="muted" data-i18n="worldSub"></div>
+      <div class="chips" id="worldChips"></div>
+      <div class="msg warn hidden" id="worldTip"></div>
+      <div id="worldList"></div>
+    </div>
+
+    <div class="card pane hidden" id="tab-quests">
+      <div class="row" style="justify-content:space-between">
+        <h2 data-i18n="questsTitle"></h2>
+        <input type="text" id="questSearch" data-i18n-ph="questsSearch">
+      </div>
+      <div class="msg warn" style="margin:8px 0 0" data-i18n="questsWarn"></div>
+      <div id="questList"></div>
+    </div>
+
+    <div class="card pane hidden" id="tab-adv">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <h2 style="margin:0"><span data-i18n="searchTitle"></span> <span class="muted" id="count"></span></h2>
+        <div class="row">
+          <input type="text" id="search" data-i18n-ph="searchPh">
+          <select id="catFilter"></select>
+        </div>
+      </div>
+      <div class="muted" style="margin-bottom:8px" data-i18n="searchSub"></div>
+      <div id="advList"></div>
+    </div>
+
+    <div class="sticky">
+      <div class="row">
+        <button id="copy" data-i18n="copySave"></button>
+        <button class="sec hidden" id="download" data-i18n="downloadSave"></button>
+        <button class="sec" id="reset" data-i18n="resetAll"></button>
+        <span class="muted" id="changes"></span>
+      </div>
+      <div id="outMsg"></div>
+      <details style="margin-top:8px"><summary class="muted" data-i18n="showText"></summary><textarea id="out" readonly></textarea></details>
+    </div>
+  </div>
+
+  <footer><span data-i18n="devBy"></span> <a href="https://github.com/ezdalzotto" target="_blank" rel="noopener">Ernani Zanandrea Dalzotto</a> · <a href="https://github.com/ezdalzotto" target="_blank" rel="noopener">github.com/ezdalzotto</a><br><span data-i18n="footer"></span></footer>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const SAVE_DIR = '%APPDATA%\\OceansHeart\\oceans_heart_saves';
+
+// =====================================================================
+// Textos da interface / Interface text
+// =====================================================================
+const UI = {
+  pt: {
+    title:"Editor de Save – Ocean's Heart",
+    subtitle:'Altere vida, dinheiro, itens e ative trapaças editando o arquivo de save. Funciona em qualquer versão do jogo.',
+    by:'por', devBy:'Desenvolvido por', loadTitle:'1. Carregue seu save', guideOpen:'❓ Onde fica o arquivo do save?', guideClose:'✖ Fechar passo a passo',
+    howTitle:'Como encontrar e trocar o arquivo do save',
+    step1:'<b>Feche o jogo.</b> Se usar Steam Cloud, desative-o para este jogo (botão direito no jogo → Propriedades → Geral), senão ele pode desfazer a edição.',
+    step2:'Abra a pasta dos saves: aperte <kbd>Win</kbd> + <kbd>R</kbd>, cole o caminho abaixo e aperte <kbd>Enter</kbd>.',
+    step2b:'Exemplo de onde fica: <code>C:\\Users\\SeuNome\\AppData\\Roaming\\OceansHeart\\oceans_heart_saves</code>. O <code>save1.dat</code> é o 1º espaço de jogo, <code>save2.dat</code> o 2º e <code>save3.dat</code> o 3º.',
+    step3:'<b>Faça uma cópia de segurança</b> do arquivo (copie e cole na mesma pasta).',
+    step4:'Carregue o arquivo, faça as mudanças e clique em <b>Copiar save editado</b>. Abra o save no Bloco de Notas, apague tudo (<kbd>Ctrl</kbd>+<kbd>A</kbd>), cole (<kbd>Ctrl</kbd>+<kbd>V</kbd>) e salve (<kbd>Ctrl</kbd>+<kbd>S</kbd>).',
+    copyPath:'📋 Copiar caminho', pathCopied:'✓ Copiado',
+    drop:'📂 <b>Clique aqui</b> ou arraste o arquivo <code>save1.dat</code>',
+    dropTip:'Atalho: na janela de abrir arquivo, cole <code>%APPDATA%\\OceansHeart\\oceans_heart_saves</code> no campo "Nome" e aperte Enter para ir direto à pasta.',
+    pasteSummary:'Ou cole o conteúdo do arquivo', pastePh:'Cole aqui o texto do save', pasteLoad:'Carregar texto colado',
+    tabCheats:'⚡ Trapaças', tabStatus:'❤️ Status', tabItems:'🎒 Itens', tabWorld:'🗺️ Mundo', tabQuests:'📜 Missões', tabSearch:'🔍 Buscar tudo',
+    cheatsTitle:'Trapaças', cheatsSub:'Clique para ligar ou desligar. Desligar volta ao valor original do seu save.', godmode:'⭐ Ativar todas',
+    cheatsNote:'As opções "infinitas" usam valores tão altos que na prática não acabam. Com <b>Vida gigante + Quase invencível + Reviver sempre</b> você aguenta milhares de golpes. Cair em buracos ou água funda não tira vida, só te leva de volta.',
+    on:'LIGADO', off:'desligado', notAvail:'Não disponível neste save.',
+    statusTitle:'Status da Tilia', statusSub:'A vida conta em <b>meios corações</b>: 2 = 1 coração. A tela mostra no máximo 20 corações, mas o valor real pode ser maior.',
+    itemsTitle:'Itens', itemsSearch:'Buscar item…',
+    itemsSub:'Itens apagados = você ainda não tem. Ligar um <b>equipamento</b> que você ainda não ganhou pode pular partes da história. Use com cuidado.',
+    worldTitle:'Mundo', worldSearch:'Buscar lugar ou coisa…',
+    worldSub:'Baús, portas, chefes e viagens que você <b>já</b> abriu, derrotou ou liberou. O jogo só grava o que já aconteceu, então o que você ainda não encontrou não aparece aqui.',
+    worldTip:'💡 Dica: desligar um baú já aberto faz ele aparecer fechado de novo. Com uma "Peça de coração" isso dá corações extras.',
+    questsTitle:'Missões e história', questsSearch:'Buscar missão ou personagem…',
+    questsWarn:'⚠️ Mudar o andamento das missões pode <b>travar a história</b>. Use só para consertar uma missão bugada, e sempre com backup.',
+    questsGroup:'📜 Missões (andamento)', storyGroup:'💬 Conversas, pistas e eventos',
+    searchTitle:'Buscar tudo', searchPh:'Digite em português ou o nome técnico', allCats:'Todas as categorias',
+    searchSub:'Todas as informações do save, cada uma com a explicação do que é. Exemplos: "coração", "baú", "porta", "Hazel", "volume".',
+    count:'({a} de {b})', nothing:'Nada encontrado.', otherPlaces:'Outros lugares',
+    copySave:'📋 Copiar save editado', downloadSave:'💾 Baixar arquivo', resetAll:'↩️ Desfazer tudo', showText:'Ver texto final',
+    changes:'{n} alteração(ões) prontas', noChanges:'Nenhuma alteração ainda',
+    copied:'Copiado! Abra o save no Bloco de Notas → Ctrl+A → Ctrl+V → Ctrl+S. Depois é só abrir o jogo.',
+    copyFail:'Não consegui copiar sozinho. O texto está selecionado em "Ver texto final": aperte Ctrl+C.',
+    downloaded:'Arquivo baixado. Coloque-o na pasta dos saves no lugar do original (com o mesmo nome).',
+    resetDone:'Tudo voltou ao original.', godDone:'Todas as trapaças ligadas. Agora clique em "Copiar save editado".',
+    errBinary:'Esse arquivo não é texto. Confira se escolheu o save1.dat (ou save2/save3).',
+    errEmpty:'Não reconheci esse arquivo como um save do jogo. Ele deveria ter linhas como  _current_money = 120',
+    loaded:'Carregado: {f} — {n} informações encontradas.', pasted:'texto colado',
+    notOH:' Atenção: não parece um save do Ocean\'s Heart, algumas opções podem não aparecer.',
+    yes:'Sim', no:'Não', ownTitle:'Tem / não tem',
+    footer:'Ferramenta não oficial feita por fãs, sem ligação com Max Mraz ou Nordcurrent. Tudo roda no seu navegador: o save não é enviado para lugar nenhum.',
+  },
+  en: {
+    title:"Ocean's Heart Save Editor",
+    subtitle:'Change health, money and items, or turn on cheats by editing your save file. Works with any game version.',
+    by:'by', devBy:'Developed by', loadTitle:'1. Load your save', guideOpen:'❓ Where is my save file?', guideClose:'✖ Close guide',
+    howTitle:'How to find and replace your save file',
+    step1:'<b>Close the game.</b> If you use Steam Cloud, turn it off for this game (right-click the game → Properties → General), or it may undo your edit.',
+    step2:'Open the save folder: press <kbd>Win</kbd> + <kbd>R</kbd>, paste the path below and press <kbd>Enter</kbd>.',
+    step2b:'Example location: <code>C:\\Users\\YourName\\AppData\\Roaming\\OceansHeart\\oceans_heart_saves</code>. <code>save1.dat</code> is save slot 1, <code>save2.dat</code> slot 2 and <code>save3.dat</code> slot 3.',
+    step3:'<b>Make a backup</b> of the file (copy and paste it in the same folder).',
+    step4:'Load the file, make your changes and click <b>Copy edited save</b>. Open the save in Notepad, select all (<kbd>Ctrl</kbd>+<kbd>A</kbd>), paste (<kbd>Ctrl</kbd>+<kbd>V</kbd>) and save (<kbd>Ctrl</kbd>+<kbd>S</kbd>).',
+    copyPath:'📋 Copy path', pathCopied:'✓ Copied',
+    drop:'📂 <b>Click here</b> or drop your <code>save1.dat</code> file',
+    dropTip:'Shortcut: in the open-file window, paste <code>%APPDATA%\\OceansHeart\\oceans_heart_saves</code> into the "File name" box and press Enter to jump straight to the folder.',
+    pasteSummary:'Or paste the file contents', pastePh:'Paste the save text here', pasteLoad:'Load pasted text',
+    tabCheats:'⚡ Cheats', tabStatus:'❤️ Stats', tabItems:'🎒 Items', tabWorld:'🗺️ World', tabQuests:'📜 Quests', tabSearch:'🔍 Search all',
+    cheatsTitle:'Cheats', cheatsSub:'Click to turn on or off. Turning off restores the original value from your save.', godmode:'⭐ Turn all on',
+    cheatsNote:'The "infinite" options use values so high they never run out in practice. With <b>Huge health + Almost invincible + Always revive</b> you can take thousands of hits. Falling into pits or deep water costs no health; it just puts you back.',
+    on:'ON', off:'off', notAvail:'Not available in this save.',
+    statusTitle:"Tilia's stats", statusSub:'Health is counted in <b>half hearts</b>: 2 = 1 heart. The screen shows at most 20 hearts, but the real value can be higher.',
+    itemsTitle:'Items', itemsSearch:'Search item…',
+    itemsSub:"Faded items = you don't have them yet. Turning on <b>equipment</b> you haven't earned yet may skip parts of the story. Use with care.",
+    worldTitle:'World', worldSearch:'Search place or thing…',
+    worldSub:"Chests, doors, bosses and travel routes you have <b>already</b> opened, beaten or unlocked. The game only records what has happened, so things you haven't found yet don't show up here.",
+    worldTip:'💡 Tip: turning off an opened chest makes it appear closed again. With a "Heart piece" that gives you extra hearts.',
+    questsTitle:'Quests and story', questsSearch:'Search quest or character…',
+    questsWarn:'⚠️ Changing quest progress can <b>break the story</b>. Only use it to fix a bugged quest, and always keep a backup.',
+    questsGroup:'📜 Quests (progress)', storyGroup:'💬 Conversations, clues and events',
+    searchTitle:'Search all', searchPh:'Type in English or the technical name', allCats:'All categories',
+    searchSub:'Everything in the save, each with an explanation. Examples: "heart", "chest", "door", "Hazel", "volume".',
+    count:'({a} of {b})', nothing:'Nothing found.', otherPlaces:'Other places',
+    copySave:'📋 Copy edited save', downloadSave:'💾 Download file', resetAll:'↩️ Undo all', showText:'Show final text',
+    changes:'{n} change(s) ready', noChanges:'No changes yet',
+    copied:'Copied! Open the save in Notepad → Ctrl+A → Ctrl+V → Ctrl+S. Then just start the game.',
+    copyFail:'Could not copy automatically. The text is selected under "Show final text": press Ctrl+C.',
+    downloaded:'File downloaded. Put it in the save folder in place of the original (same name).',
+    resetDone:'Everything is back to the original.', godDone:'All cheats on. Now click "Copy edited save".',
+    errBinary:"This file isn't text. Check that you picked save1.dat (or save2/save3).",
+    errEmpty:"This doesn't look like a game save. It should have lines like  _current_money = 120",
+    loaded:'Loaded: {f} — {n} entries found.', pasted:'pasted text',
+    notOH:" Warning: this doesn't look like an Ocean's Heart save; some options may be missing.",
+    yes:'Yes', no:'No', ownTitle:'Have / don\'t have',
+    footer:'Unofficial fan-made tool, not affiliated with Max Mraz or Nordcurrent. Everything runs in your browser: your save is never uploaded anywhere.',
+  }
+};
+let lang = 'en';
+try { const s = localStorage.getItem('ohse_lang'); if (s === 'pt' || s === 'en') lang = s; } catch(_) {}
+const T = (k, v) => { let s = UI[lang][k]; if (v) for (const x in v) s = s.replace('{'+x+'}', v[x]); return s; };
+const tr = (pt, en) => lang === 'pt' ? pt : en;
+
+// =====================================================================
+// Dados do jogo / Game data (nomes tirados do código do jogo)
+// =====================================================================
+// chave: [nome PT, descrição PT, nome EN, descrição EN]
+const STATUS = {
+  _current_life:['Vida atual','Em meios corações (2 = 1 coração)','Current health','In half hearts (2 = 1 heart)'],
+  _max_life:['Vida máxima','Começa em 6 (3 corações)','Max health','Starts at 6 (3 hearts)'],
+  _current_money:['Dinheiro','Moedas na carteira','Money','Coins in your wallet'],
+  _max_money:['Limite da carteira','Máximo de moedas','Wallet limit','Maximum coins'],
+  _current_magic:['Magia atual','Gasta por feitiços','Current magic','Used by spells'],
+  _max_magic:['Magia máxima','Normal: 100','Max magic','Normal: 100'],
+  defense:['Defesa','O dano recebido é dividido por ela. Começa em 2','Defense','Damage taken is divided by it. Starts at 2'],
+  sword_damage:['Força da espada','Dano por golpe. Começa em 1','Sword power','Damage per hit. Starts at 1'],
+  bow_damage:['Força do arco','Dano por flecha. Começa em 2','Bow power','Damage per arrow. Starts at 2'],
+  bomb_damage:['Força das bombas','Começa em 8','Bomb power','Starts at 8'],
+  fire_damage:['Força do fogo','Começa em 3','Fire power','Starts at 3'],
+  elixer_restoration_level:['Cura do elixir','Vida recuperada ao reviver','Elixir healing','Health restored when you revive'],
+  death_count:['Número de mortes','Só um contador','Death count','Just a counter'],
+};
+const stName = k => tr(STATUS[k][0], STATUS[k][2]);
+const stDesc = k => tr(STATUS[k][1], STATUS[k][3]);
+
+// [id, nome PT, nome EN, descrição PT, descrição EN, grupo, variável de quantidade (opcional)]
+const ITEMS_RAW = [
+  ['elixer','Elixir','Elixir','Bebe para curar. Se morrer, revive sozinho','Drink to heal. If you die, you revive automatically','cons'],
+  ['bow','Flechas','Arrows','Munição do arco (máx. normal 100)','Bow ammo (normal max 100)','cons','amount_bow'],
+  ['bomb_counter','Bombas','Bombs','Máx. normal 99','Normal max 99','cons','amount_bomb_counter'],
+  ['potion_magic_restoration','Poção de magia','Magic potion','Recupera magia','Restores magic','cons'],
+  ['apples','Maçãs','Apples','Comida, recupera vida','Food, restores health','cons'],
+  ['bread','Pão','Bread','Comida, recupera vida','Food, restores health','cons'],
+  ['berries','Frutinhas','Berries','Comida, recupera vida','Food, restores health','cons'],
+  ['soup','Sopa','Soup','Comida, recupera vida','Food, restores health','cons'],
+  ['bait','Isca','Bait','Para pescar','For fishing','cons'],
+  ['burdock','Bardana','Burdock','Erva para poções','Potion herb','ingr'],
+  ['chamomile','Camomila','Chamomile','Erva para poções','Potion herb','ingr'],
+  ['lavendar','Lavanda','Lavender','Erva para poções','Potion herb','ingr'],
+  ['violets','Violetas','Violets','Flor para poções','Potion flower','ingr'],
+  ['forsythia','Forsítia','Forsythia','Flor para poções','Potion flower','ingr'],
+  ['witch_hazel','Hamamélis','Witch hazel','Erva para poções','Potion herb','ingr'],
+  ['monkshood','Acônito','Monkshood','Erva rara','Rare herb','ingr'],
+  ['kingscrown','Coroa-real','Kingscrown','Erva rara','Rare herb','ingr'],
+  ['ghost_orchid','Orquídea-fantasma','Ghost orchid','Flor rara','Rare flower','ingr'],
+  ['mandrake','Mandrágora','Mandrake','Raiz rara','Rare root','ingr'],
+  ['mandrake_white','Mandrágora branca','White mandrake','Raiz rara','Rare root','ingr'],
+  ['firethorn_berries','Frutos de espinho-de-fogo','Firethorn berries','Ingrediente','Ingredient','ingr'],
+  ['dandelion_seeds','Sementes de dente-de-leão','Dandelion seeds','Ingrediente','Ingredient','ingr'],
+  ['monster_guts','Vísceras de monstro','Monster guts','Material de monstro','Monster material','ingr','amount_guts'],
+  ['monster_bones','Ossos de monstro','Monster bones','Material de monstro','Monster material','ingr','amount_bones'],
+  ['coral_ore','Minério de coral','Coral ore','Material para melhorias','Upgrade material','ingr'],
+  ['geode','Geodo','Geode','Material para melhorias','Upgrade material','ingr'],
+  ['sword','Espada','Sword','Arma principal','Main weapon','equip'],
+  ['shield','Escudo','Shield','Bloqueia ataques','Blocks attacks','equip'],
+  ['bow_fire','Flechas de fogo','Fire arrows','Melhoria do arco','Bow upgrade','equip'],
+  ['bow_bombs','Flechas-bomba','Bomb arrows','Melhoria do arco','Bow upgrade','equip'],
+  ['bow_warp','Flechas de teletransporte','Warp arrows','Melhoria do arco','Bow upgrade','equip'],
+  ['boomerang','Bumerangue','Boomerang','Atordoa e pega itens','Stuns and grabs items','equip'],
+  ['hookshot','Gancho','Hookshot','Puxa você até pontos de agarrar','Pulls you to grapple points','equip'],
+  ['ball_and_chain','Bola com corrente','Ball and chain','Arma pesada','Heavy weapon','equip'],
+  ['spear','Lança','Spear','Arma de alcance','Reach weapon','equip'],
+  ['dash','Investida','Dash','Corrida rápida','Quick dash','equip'],
+  ['tornado_dash','Investida tornado','Tornado dash','Investida melhorada','Upgraded dash','equip'],
+  ['flippers','Nadadeiras','Flippers','Permite nadar','Lets you swim','equip'],
+  ['barrier','Barreira (feitiço)','Barrier (spell)','Reflete projéteis','Reflects projectiles','equip'],
+  ['gust','Rajada (feitiço)','Gust (spell)','Empurra inimigos','Pushes enemies away','equip'],
+  ['leaf_tornado','Tornado de folhas (feitiço)','Leaf tornado (spell)','Ataque mágico','Magic attack','equip'],
+  ['thunder_charm','Amuleto do trovão (feitiço)','Thunder charm (spell)','Raios mágicos','Magic lightning','equip'],
+  ['crystal_spark','Faísca de cristal (feitiço)','Crystal spark (spell)','Ataque mágico','Magic attack','equip'],
+  ['watering_can','Regador','Watering can','Ferramenta','Tool','equip'],
+  ['matches','Fósforos','Matches','Acende coisas','Lights things','equip'],
+  ['tacklebox','Caixa de pesca','Tackle box','Ferramenta de pesca','Fishing tool','equip'],
+  ['stockpot','Panela','Stockpot','Para cozinhar','For cooking','equip'],
+  ['charts','Cartas náuticas','Sea charts','Mapas do mar','Maps of the sea','equip'],
+  ['amulet','Amuleto','Amulet','Acessório','Accessory','equip'],
+  ['oak_charm','Talismã de carvalho','Oak charm','Acessório','Accessory','equip'],
+  ['ironwood_charm','Talismã de pau-ferro','Ironwood charm','Acessório','Accessory','equip'],
+  ['seagrass_charm','Talismã de alga','Seagrass charm','Acessório','Accessory','equip'],
+  ['dandelion_charm','Talismã de dente-de-leão','Dandelion charm','Acessório','Accessory','equip'],
+  ['armor_tools','Ferramentas de armadura','Armor tools','Para melhorar a armadura','For upgrading armor','equip'],
+  ['contract','Contrato','Contract','Item de missão','Quest item','quest'],
+  ['oceansheart_chart',"Carta do Ocean's Heart","Ocean's Heart chart",'Item de missão','Quest item','quest'],
+  ['hideout_chart','Carta do esconderijo','Hideout chart','Item de missão','Quest item','quest'],
+  ['old_stockpot','Panela velha','Old stockpot','Item de missão','Quest item','quest'],
+  ['honeycomb','Favo de mel','Honeycomb','Item de missão','Quest item','quest'],
+  ['iron_pinecone','Pinha de ferro','Iron pinecone','Item de missão','Quest item','quest'],
+  ['manna_oak_twig','Galho de carvalho-maná','Manna oak twig','Item de missão','Quest item','quest'],
+  ['stone_beak','Bico de pedra','Stone beak','Item de missão','Quest item','quest'],
+  ['tidal_starfruit','Carambola das marés','Tidal starfruit','Item de missão','Quest item','quest'],
+  ['whisky_for_juglan','Uísque para o Juglan','Whisky for Juglan','Item de missão','Quest item','quest'],
+  ['sleeping_draught','Poção do sono','Sleeping draught','Item de missão','Quest item','quest'],
+  ['key_ballast_council_building','Chave: Conselho de Ballast','Key: Ballast Council Building','','','keys'],
+  ['basswood_tavern_key','Chave: Taverna Basswood','Key: Basswood Tavern','','','keys'],
+  ['key_dandelion_charm','Chave: talismã de dente-de-leão','Key: Dandelion charm','','','keys'],
+  ['key_goat_caverns','Chave: Goat Caverns','Key: Goat Caverns','','','keys'],
+  ['key_goat_tunnels','Chave: Goat Tunnels','Key: Goat Tunnels','','','keys'],
+  ['key_hourglass_fort','Chave: Hourglass Fort','Key: Hourglass Fort','','','keys'],
+  ['key_juneberry_inn','Chave: Pousada Juneberry','Key: Juneberry Inn','','','keys'],
+  ['key_juniper_grove','Chave: Juniper Grove','Key: Juniper Grove','','','keys'],
+  ['key_kingsdown','Chave: Kingsdown','Key: Kingsdown','','','keys'],
+  ['key_limestone_sanctuary','Chave: Santuário de Limestone','Key: Limestone Sanctuary','','','keys'],
+  ['key_mead_safehouse','Chave: Refúgio Mead','Key: Mead Safehouse','','','keys'],
+  ['key_poplar_shack','Chave: Cabana Poplar','Key: Poplar Shack','','','keys'],
+  ['key_sinking_lighthouse','Chave: Farol Afundado','Key: Sinking Lighthouse','','','keys'],
+  ['key_sometimes_cape_ruins','Chave: Ruínas de Sometimes Cape','Key: Sometimes Cape Ruins','','','keys'],
+  ['key_spruce_head','Chave: Spruce Head','Key: Spruce Head','','','keys'],
+  ['key_to_oakhaven','Chave: Oakhaven','Key: Oakhaven','','','keys'],
+];
+const ITEMS = ITEMS_RAW.map(([id,np,ne,dp,de,g,amt]) => ({
+  id, np, ne, dp: dp || 'Chave', de: de || 'Key', g, poss:'possession_'+id,
+  amt: amt || ((g==='cons'||g==='ingr') ? 'amount_'+id : null)
+}));
+const itName = it => tr(it.np, it.ne);
+const itDesc = it => tr(it.dp, it.de);
+const itemById = {}; ITEMS.forEach(i => itemById[i.id] = i);
+const ITEM_IDS = ITEMS.map(i => i.id).sort((a,b) => b.length - a.length);
+const GROUPS = {cons:['🧪 Consumíveis e munição','🧪 Consumables and ammo'], ingr:['🌿 Ingredientes e materiais','🌿 Ingredients and materials'], equip:['🗡️ Equipamentos e feitiços','🗡️ Equipment and spells'], quest:['📜 Itens de missão','📜 Quest items'], keys:['🔑 Chaves','🔑 Keys']};
+const MAXN = {amount_bow:100, amount_bomb_counter:99};
+const AMMO = ['amount_bow','amount_bomb_counter'];
+
+// Lugares: [id no código, nome PT, nome EN] — do mais específico ao mais geral
+const PLACES = [
+  ['ballast_council_building','Conselho de Ballast','Ballast Council'],['ballast_council','Conselho de Ballast','Ballast Council'],['ballast_harbor','Ballast Harbor','Ballast Harbor'],
+  ['hourglass_fort','Hourglass Fort','Hourglass Fort'],['spruce_head_shrine','Santuário de Spruce Head','Spruce Head Shrine'],['spruce_head','Spruce Head','Spruce Head'],['shsstatue','Santuário de Spruce Head','Spruce Head Shrine'],['shsf','Santuário de Spruce Head','Spruce Head Shrine'],['shs','Santuário de Spruce Head','Spruce Head Shrine'],
+  ['goat_caverns','Goat Caverns','Goat Caverns'],['goat_tunnels','Goat Tunnels','Goat Tunnels'],['goat_tunnel','Goat Tunnels','Goat Tunnels'],['goat_hill','Goat Hill','Goat Hill'],['west_goat','West Goat','West Goat'],['goatshead','Goatshead','Goatshead'],
+  ['oakhaven_city','Oakhaven','Oakhaven'],['oakhaven_port','Porto de Oakhaven','Oakhaven Port'],['oakhaven','Oakhaven','Oakhaven'],['oak_port','Porto de Oakhaven','Oakhaven Port'],['oak_palace','Palácio de Oakhaven','Oakhaven Palace'],['west_oak','West Oak','West Oak'],
+  ['limestone_sanctuary','Santuário de Limestone','Limestone Sanctuary'],['new_limestone','Limestone Island','Limestone Island'],['west_limestone','Oeste de Limestone','West Limestone'],['limestone','Limestone Island','Limestone Island'],
+  ['yarrowmouth_village','Yarrowmouth','Yarrowmouth'],['yarrowmouth','Yarrowmouth','Yarrowmouth'],['yarrow_village','Yarrowmouth','Yarrowmouth'],['yarrow','Yarrowmouth','Yarrowmouth'],
+  ['poplar_forest','Floresta Poplar','Poplar Forest'],['poplar_coast','Costa Poplar','Poplar Coast'],['poplar_shack','Cabana Poplar','Poplar Shack'],
+  ['juniper_grove','Juniper Grove','Juniper Grove'],['marblecliff','Marblecliff','Marblecliff'],['sinking_lighthouse','Farol Afundado','Sinking Lighthouse'],['sinking_palace','Palácio Afundado','Sunken Palace'],['sunken_palace','Palácio Afundado','Sunken Palace'],
+  ['sometimes_cape_ruins','Ruínas de Sometimes Cape','Sometimes Cape Ruins'],['sometimes_cape','Sometimes Cape','Sometimes Cape'],['sometimes','Sometimes Cape','Sometimes Cape'],['kingsdown_marsh','Pântano de Kingsdown','Kingsdown Marsh'],['kingsdown','Kingsdown','Kingsdown'],
+  ['fort_crow','Fort Crow','Fort Crow'],['puzzlewood','Puzzlewood','Puzzlewood'],['manna_oak_tunnels','Túneis de Manna Oak','Manna Oak Tunnels'],['manna_oaks','Manna Oak','Manna Oak'],['manna_oak','Manna Oak','Manna Oak'],
+  ['basswood_tavern','Taverna Basswood','Basswood Tavern'],['juneberry_inn','Pousada Juneberry','Juneberry Inn'],['crabhook_village','Crabhook','Crabhook'],['crabhook','Crabhook','Crabhook'],
+  ['naerreturn','Naerreturn','Naerreturn'],['nearreturn_bay','Baía de Naerreturn','Naerreturn Bay'],['tern_marsh','Pântano Tern','Tern Marsh'],['silent_glade','Silent Glade','Silent Glade'],
+  ['amalenchier_tomb','Tumba de Amalenchier','Amalenchier Tomb'],['merchant_hq','Sede dos Mercadores','Merchant HQ'],['dream_cannons','Canhões dos Sonhos','Dream Cannons'],['dream_cannon','Canhões dos Sonhos','Dream Cannons'],['ball_cave','Caverna da Bola','Ball Cave'],
+  ['briarwood','Briarwood','Briarwood'],['east_verne','East Verne','East Verne'],['hemlock_ruins','Ruínas de Hemlock','Hemlock Ruins'],['lighthouse_cape','Cabo do Farol','Lighthouse Cape'],['marsh_tunnel','Túnel do Pântano','Marsh Tunnel'],
+  ['kelpton','Kelpton','Kelpton'],['saloon','Saloon','Saloon'],['aster_house','Casa de Aster','Aster House'],['brute_house','Casa dos Brutos','Brute House'],['juglans','Juglans','Juglans'],['mead_safehouse','Refúgio Mead','Mead Safehouse'],['meadery','Hidromelaria','Meadery'],
+  ['carrot_stash','Esconderijo de Cenouras','Carrot Stash'],['two_eye_rock','Two Eye Rock','Two Eye Rock'],['pirate_council','Conselho Pirata','Pirate Council'],['salamander_heartache','Salamander Heartache','Salamander Heartache'],
+  ['demo_1','Área da demo','Demo area'],
+];
+const ABIL = {sword:['Espada (nível)','Sword (level)'],shield:['Escudo (nível)','Shield (level)'],tunic:['Armadura (nível)','Armor (level)'],swim:['Nadar','Swim'],run:['Correr / investida','Run / dash'],lift:['Levantar objetos','Lift objects'],jump_over_water:['Pular sobre a água','Jump over water'],detect_weak_walls:['Detectar paredes fracas','Detect weak walls'],get_back_from_death:['Voltar da morte','Return from death'],sword_knowledge:['Golpe giratório','Spin attack']};
+const SYS = {
+  _version:['Versão do save','Não mexa.','Save version','Do not change.'],
+  _starting_map:['Mapa onde você aparece ao carregar','Nome interno do mapa.','Map you load into','Internal map name.'],
+  _starting_point:['Ponto de entrada no mapa','Nome interno.','Entry point on the map','Internal name.'],
+  music_volume:['Volume da música','De 0 a 100.','Music volume','From 0 to 100.'],
+  respawn_map:['Mapa onde você renasce','Usado quando você morre sem elixir.','Respawn map','Used when you die without an elixir.'],
+  respawn_x:['Posição de renascer (horizontal)','','Respawn position (horizontal)',''], respawn_y:['Posição de renascer (vertical)','','Respawn position (vertical)',''],
+  respawn_layer:['Camada de renascer','','Respawn layer',''], respawn_direction:['Direção ao renascer','','Respawn direction',''],
+  inventory_cursor_index:['Posição do cursor no inventário','Só visual.','Inventory cursor position','Visual only.'],
+  inventory_last_item_index:['Último item selecionado no inventário','Só visual.','Last selected inventory item','Visual only.'],
+  last_submenu:['Último menu de pausa aberto','Só visual.','Last pause menu opened','Visual only.'],
+  last_quest_log_tab:['Última aba do diário de missões','Só visual.','Last quest log tab','Visual only.'],
+  hero_dashing:['Está fazendo a investida','Estado temporário.','Is dashing','Temporary state.'],
+  hero_rolling:['Está rolando','Estado temporário.','Is rolling','Temporary state.'],
+  gameovering:['Está na tela de game over','Estado temporário.','Is on the game over screen','Temporary state.'],
+  quest_log_a:['Diário de missões (interno)','Não mexa.','Quest log (internal)','Do not change.'],
+  quest_log_b:['Diário de missões (interno)','Não mexa.','Quest log (internal)','Do not change.'],
+  reveal_quest_totals:['Mostrar total de missões','Opção do diário.','Show quest totals','Quest log option.'],
+};
+// Casos especiais: [categoria, título PT, dica PT, título EN, dica EN, lugar, liga/desliga]
+const OVR = {
+  found_hazel:['historia','Encontrou a Hazel','Marca da história principal. Não mexa.','Found Hazel','Main story flag. Do not change.','',1],
+  hazel_is_here:['historia','Hazel está presente','Marca da história principal.','Hazel is here','Main story flag.','',1],
+  squid_fled:['chefes','A lula fantasma fugiu','Parte da missão Phantom Squid.','The phantom squid fled','Part of the Phantom Squid quest.','',1],
+  lighthouses_quest_num_lit:['missoes','Faróis acesos (quantidade)','Quantos faróis você já acendeu na missão dos faróis.','Lighthouses lit (count)','How many lighthouses you have lit in the lighthouse quest.','',0],
+  spruce_head_shirine_num_fountains_activated:['portas','Fontes ativadas (quantidade)','Quantas fontes do santuário já foram ativadas.','Fountains activated (count)','How many shrine fountains are active.','spruce_head_shrine',0],
+  you_got_mushroom_spot_key:['tesouros','🔑 Chave do Mushroom Spot','Sim = já pegou.','🔑 Mushroom Spot key','Yes = already picked up.','',1],
+  dad_dialog_counter_tavern:['historia','Conversas com o pai (na taverna)','Quantas vezes você falou com ele.','Talks with Dad (at the tavern)','How many times you talked to him.','',0],
+  tic_tac_prize_money_status:['missoes','Prêmio do jogo da velha','Situação do prêmio em dinheiro do jogo da velha.','Tic-tac-toe prize','Status of the tic-tac-toe money prize.','oakhaven',0],
+  oakhaven_wishing_well_balance:['historia','Dinheiro jogado no poço dos desejos','Quanto você já jogou no poço.','Money in the wishing well','How much you have thrown into the well.','oakhaven',0],
+  found_boomerang:['itens','Possui: Bumerangue','Sim = já tem o bumerangue.','Have: Boomerang','Yes = you have the boomerang.','',1],
+};
+const CATS = {
+  status:['❤️','Status','Stats'], itens:['🎒','Itens','Items'],
+  tesouros:['💎','Tesouros e baús','Treasures and chests'], portas:['🚪','Portas e passagens','Doors and passages'], chefes:['💀','Chefes e inimigos','Bosses and enemies'], viagem:['⛵','Viagens','Travel'],
+  missoes:['📜','Missões','Quests'], historia:['💬','Conversas e história','Conversations and story'], sistema:['⚙️','Sistema e controles','System and controls'],
+};
+const catLabel = c => CATS[c][0]+' '+tr(CATS[c][1], CATS[c][2]);
+
+// =====================================================================
+// Leitura e escrita do save / Save parsing
+// =====================================================================
+let entries = [];
+let fileName = 'save1.dat';
+function parseLuaString(s){
+  let out = '';
+  for (let i = 1; i < s.length - 1; i++){
+    const c = s[i];
+    if (c === '\\' && i < s.length - 2){
+      const n = s[++i]; const m = {n:'\n',t:'\t',r:'\r','\\':'\\','"':'"',"'":"'"};
+      if (n in m) out += m[n];
+      else if (/\d/.test(n)){ let d = n; while (d.length < 3 && /\d/.test(s[i+1]) && i+1 < s.length-1) d += s[++i]; out += String.fromCharCode(+d); }
+      else out += n;
+    } else out += c;
+  }
+  return out;
+}
+const luaQuote = s => '"' + String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r') + '"';
+const LINE = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*;?\s*$/;
+function parse(text){
+  const res = []; let n = 0;
+  text.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').split('\n').forEach(line => {
+    const m = line.match(LINE);
+    if (!m){ res.push({raw:line}); return; }
+    const key = m[1], v = m[2]; let type, value;
+    if (/^(true|false)$/.test(v)){ type = 'boolean'; value = v === 'true'; }
+    else if (/^-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(v)){ type = 'number'; value = Number(v); }
+    else if (/^".*"$/.test(v) || /^'.*'$/.test(v)){ type = 'string'; value = parseLuaString(v); }
+    else { res.push({raw:line}); return; }
+    res.push({key, type, value, orig:value, existed:true}); n++;
+  });
+  while (res.length && res[res.length-1].raw === '') res.pop();
+  return {res, n};
+}
+const isVar = e => e.raw === undefined && !(e.value === undefined && !e.existed);
+const vars = () => entries.filter(isVar);
+function serialize(){
+  return entries.filter(e => e.raw !== undefined || isVar(e)).map(e => {
+    if (e.raw !== undefined) return e.raw;
+    const v = e.type === 'boolean' ? (e.value ? 'true' : 'false') : e.type === 'number' ? String(e.value) : luaQuote(e.value);
+    return e.key + ' = ' + v;
+  }).join('\n') + '\n';
+}
+const find = k => entries.find(e => e.key === k);
+const get = k => { const e = find(k); return e ? e.value : undefined; };
+function set(k, v){
+  const e = find(k);
+  if (e) e.value = v;
+  else entries.push({key:k, type:typeof v === 'boolean' ? 'boolean' : 'number', value:v, orig:undefined, existed:false});
+}
+function restore(k){ const e = find(k); if (e) e.value = e.orig; }
+const changed = e => e.value !== e.orig;
+
+// =====================================================================
+// Descrições automáticas / Automatic descriptions
+// =====================================================================
+const titleCase = s => s.split(/[_\s]+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+function findPlace(k){
+  for (const p of PLACES){
+    const i = k.indexOf(p[0]);
+    if (i >= 0 && (i === 0 || k[i-1] === '_') && (i + p[0].length === k.length || /[_\d]/.test(k[i + p[0].length])))
+      return {p, rest:(k.slice(0,i) + '_' + k.slice(i + p[0].length)).replace(/_+/g,'_').replace(/^_|_$/g,'')};
+  }
+  return null;
+}
+const placeName = id => { const p = PLACES.find(x => x[0] === id); return p ? tr(p[1], p[2]) : ''; };
+function findItem(k){ for (const id of ITEM_IDS){ if (new RegExp('(^|_)' + id + '(_|$)').test(k)) return itemById[id]; } return null; }
+
+const cache = {pt:{}, en:{}};
+function describe(k){ return cache[lang][k] || (cache[lang][k] = describeRaw(k)); }
+function describeRaw(k){
+  const mk = (cat, t, h, place, bool01) => ({cat, t, h, place:place || '', bool01:!!bool01});
+  if (OVR[k]){ const o = OVR[k]; return mk(o[0], tr(o[1],o[3]), tr(o[2],o[4]), placeName(o[5]), o[6]); }
+  if (STATUS[k]) return mk('status', stName(k), stDesc(k));
+  if (k.startsWith('possession_')){
+    const it = itemById[k.slice(11)];
+    return mk('itens', tr('Possui: ','Have: ') + (it ? itName(it) : titleCase(k.slice(11))), tr('0 = não tem, 1 ou mais = tem (às vezes indica a versão do item).','0 = no, 1 or more = yes (sometimes the item version).'), '', true);
+  }
+  if (k.startsWith('amount_')){
+    const it = ITEMS.find(i => i.amt === k) || itemById[k.slice(7)];
+    return mk('itens', tr('Quantidade: ','Amount: ') + (it ? itName(it) : titleCase(k.slice(7))), tr('Quantas unidades você tem.','How many you have.'));
+  }
+  if (SYS[k]) return mk('sistema', tr(SYS[k][0],SYS[k][2]), tr(SYS[k][1],SYS[k][3]));
+  if (k.startsWith('_ability_')){ const a = k.slice(9); return mk('sistema', tr('Habilidade: ','Ability: ') + (ABIL[a] ? tr(ABIL[a][0],ABIL[a][1]) : titleCase(a)), tr('0 = não tem. Números maiores = níveis melhores.','0 = none. Higher numbers = better levels.')); }
+  if (/^_(keyboard|joypad)_/.test(k)) return mk('sistema', tr('Controle: ','Control: ') + titleCase(k.replace(/^_(keyboard|joypad)_/,'')), k.includes('keyboard') ? tr('Tecla do teclado para essa ação.','Keyboard key for this action.') : tr('Botão do controle para essa ação.','Gamepad button for this action.'));
+  if (/^_item_slot_\d/.test(k)) return mk('sistema', tr('Item equipado no botão ','Item assigned to button ') + k.slice(-1), tr('Nome interno do item.','Internal item name.'));
+  if (/^(rain|snow|hail)_mode_/.test(k)){ const w = {rain:['Chuva','Rain'],snow:['Neve','Snow'],hail:['Granizo','Hail']}[k.split('_')[0]]; return mk('sistema', tr(w[0]+' em um mapa', w[1]+' on a map'), tr('Clima salvo de um mapa.','Saved weather for a map.')); }
+  if (k.startsWith('last_quest_log_')) return mk('sistema', tr('Diário de missões (interno)','Quest log (internal)'), tr('Não mexa.','Do not change.'));
+  if (k.startsWith('_')) return mk('sistema', tr('Sistema: ','System: ') + titleCase(k), tr('Configuração interna do motor do jogo.','Internal game engine setting.'));
+
+  const pl = findPlace(k);
+  const place = pl ? tr(pl.p[1], pl.p[2]) : '';
+  const rest = pl ? pl.rest : k;
+  const has = (...ws) => ws.some(w => new RegExp('(^|_)' + w + '(_|$|\\d)').test(k));
+  const it = findItem(k);
+  const clean = (str, re) => { const t = titleCase(str.replace(re,' ').replace(/_+/g,' ').trim()); return (t && !/^\d+$/.test(t)) ? t : (place || titleCase(k)); };
+  const YES_GOT = tr('Sim = já pegou. Desligue e ele aparece de novo para pegar outra vez.','Yes = already taken. Turn off and it appears again so you can take it again.');
+
+  // Viagens / Travel
+  if (/travel_unlocked|island_unlocked|ferries_activated|aubrey_unlocked/.test(k))
+    return mk('viagem', tr('Viagem liberada','Travel unlocked'), tr('Sim = esse destino aparece para viajar de barco/balsa.','Yes = this destination is available by boat/ferry.'), place, true);
+  // Missões / Quests
+  if (k.startsWith('quest_')){
+    const name = titleCase(k.slice(6).replace(/_phase$|_contracts$/,''));
+    return mk('missoes', tr('Missão: ','Quest: ') + name + (k.endsWith('_contracts') ? tr(' (contratos)',' (contracts)') : ''), tr('Etapa atual da missão (0 = não começou; números maiores = mais avançada).','Current quest stage (0 = not started; higher = further along).'), place);
+  }
+  if (/^accepted_|_quest_(accepted|complete|completed)$|quest_complete$|^find_|^looking_for_|_accepted$/.test(k)){
+    const done = /complete/.test(k);
+    return mk('missoes', (done ? tr('Missão concluída: ','Quest completed: ') : tr('Missão aceita: ','Quest accepted: ')) + clean(rest, /^accepted_|^find_|^looking_for_|(^|_)quest(_|$)|_?(accepted|completed|complete)$/g), tr('Sim = sim.','Yes = yes.'), place, true);
+  }
+  // Conversas (antes de portas: "talked_to_wally" contém "wall")
+  if (/^talked_to_|_talked_to$|^spoken_with_|_spoken_to$/.test(k))
+    return mk('historia', tr('Já conversou com ','Talked to ') + titleCase(k.replace(/^talked_to_|_talked_to$|^spoken_with_|_spoken_to$|_in_.*$|_\d$/g,'')), tr('Sim = já conversou.','Yes = already talked.'), place, true);
+  if (/counter|_interactions$/.test(k))
+    return mk('historia', tr('Conversas com ','Talks with ') + titleCase(k.replace(/_?(dialog_|convo_)?counter(_.*)?$|_interactions$|^oakhaven_/g,'')), tr('Quantas vezes você falou com esse personagem (muda o que ele diz).','How many times you talked to this character (changes what they say).'), place);
+  // Chefes / Bosses
+  if (has('defeated','bested','fiend','dead','killt','destroyed','spider','shroom','caught') && !has('reward')){
+    let who = titleCase(rest.replace(/(^|_)(defeated|bested|dead|killt|destroyed|state|caught)(?=_|$)/g,' ').replace(/_+/g,' ').trim()) || 'Boss';
+    if (lang === 'pt') who = who.replace(/\bBig Spider\b/,'Aranha gigante').replace(/\bKey Spider\b/,'Aranha que guarda a chave').replace(/\bSpider\b/,'Aranha gigante').replace(/\bFiend\b/,'Demônio').replace(/\bBosses\b/,'Chefes').replace(/\bBoss\b/,'Chefe').replace(/\bGhost\b/,'Fantasma').replace(/\bShroom\b/,'Cogumelo gigante');
+    else who = who.replace(/\bBig Spider\b/,'Giant spider').replace(/\bKey Spider\b/,'Key-guarding spider').replace(/\bShroom\b/,'Giant mushroom');
+    return mk('chefes', tr('Derrotado: ','Defeated: ') + who, tr('Sim = já derrotado. Desligar às vezes faz ele voltar, mas pode bagunçar a área.','Yes = already beaten. Turning off sometimes brings it back, but may mess up the area.'), place, true);
+  }
+  // Portas e mecanismos / Doors and mechanisms
+  if (has('door','doors','wall','block','gate','bridge','switch','secret','sesecret','cracked','bombable','lit','tollbridge','furnace','fallen','unblocked','shsf','open','opened','activated') && !has('chest','treasure','health')){
+    let thing = tr('⚙️ Mecanismo ativado','⚙️ Mechanism activated');
+    if (/locked_door/.test(k)) thing = tr('🔒 Porta trancada','🔒 Locked door');
+    else if (/boss_door|boss_exit/.test(k)) thing = tr('Porta do chefe','Boss door');
+    else if (has('secret','sesecret')) thing = tr('🕳️ Passagem secreta','🕳️ Secret passage');
+    else if (has('cracked','bombable') || /weak_(wall|block)|bomb_(wall|block)/.test(k)) thing = tr('💣 Parede/bloco quebrável','💣 Breakable wall/block');
+    else if (/weak_tree|fallen/.test(k)) thing = tr('🌳 Árvore derrubada','🌳 Fallen tree');
+    else if (has('door','doors')) thing = tr('🚪 Porta aberta','🚪 Door opened');
+    else if (has('gate')) thing = tr('Portão aberto','Gate opened');
+    else if (has('bridge','tollbridge')) thing = tr('🌉 Ponte liberada','🌉 Bridge cleared');
+    else if (has('switch','shsf')) thing = tr('Interruptor','Switch');
+    else if (has('lit','furnace') || /lighthouse_activated/.test(k)) thing = tr('🔥 Farol/fornalha aceso','🔥 Lighthouse/furnace lit');
+    else if (/tomb_open/.test(k)) thing = tr('Tumba aberta','Tomb opened');
+    const n = /(\d+)$/.exec(k); if (n) thing += tr(' nº ',' #') + n[1];
+    return mk('portas', thing, tr('Sim = já aberta / quebrada / ativada.','Yes = already opened / broken / activated.'), place, true);
+  }
+  // Tesouros / Treasures
+  if (has('health')) return mk('tesouros', tr('❤️ Peça de coração (+1 coração)','❤️ Heart piece (+1 heart)'), YES_GOT, place, true);
+  if (has('armor') && (has('chest','found','obtained','upgrade') || /^got_/.test(k))) return mk('tesouros', tr('🛡️ Melhoria de armadura','🛡️ Armor upgrade'), YES_GOT, place, true);
+  const isEvent = has('sold','received','stolen','have','honestbeard','purchased','improved','quest');
+  if (!isEvent && (has('chest','treasure','crowns','money','coins','found','obtained','got','gotted','pickup','reward','dropped','elixer','key','coral','upgrade') || /\dcrowns|stash_enemy/.test(k) || it)){
+    let thing = tr('🎁 Baú de tesouro','🎁 Treasure chest');
+    if (has('elixer')) thing = tr('🧪 Elixir','🧪 Elixir');
+    else if (has('crowns','money','coins') || /\dcrowns/.test(k)) thing = tr('💰 Dinheiro','💰 Money');
+    else if (/coral_ore/.test(k)) thing = tr('💎 Minério de coral','💎 Coral ore');
+    else if (has('key')) thing = tr('🔑 Chave','🔑 Key');
+    else if (/leaf_upgrade/.test(k)) thing = tr('🍃 Melhoria do tornado de folhas','🍃 Leaf tornado upgrade');
+    else if (/fire_bow|bow_fire/.test(k)) thing = tr('🏹 Flechas de fogo','🏹 Fire arrows');
+    else if ((it && it.id === 'bow') || /(^|_)bow_chest/.test(k)) thing = tr('🏹 Arco','🏹 Bow');
+    else if (has('reward')) thing = tr('🏆 Recompensa','🏆 Reward');
+    else if (it) thing = itName(it);
+    else if (has('bombs')) thing = tr('💣 Bombas','💣 Bombs');
+    else if (has('sword')) thing = tr('🗡️ Espada','🗡️ Sword');
+    else if (has('flippers')) thing = tr('Nadadeiras','Flippers');
+    return mk('tesouros', thing, YES_GOT, place, true);
+  }
+  // História / Story
+  if (/observation|^seen_|^visited_|checkout|investigated|^checked_/.test(k))
+    return mk('historia', tr('Já examinou: ','Examined: ') + clean(rest, /(^|_)(observation|seen|visited|checkout|checked|investigated|made)(?=_|$)/g), tr('Sim = já viu ou examinou.','Yes = already seen or examined.'), place, true);
+  if (has('clue')) return mk('historia', tr('Pista: ','Clue: ') + clean(rest, /(^|_)(have|clue|reminder)(?=_|$)/g), tr('Sim = já tem a pista.','Yes = you have the clue.'), place, true);
+  if (/cutscene|scene|opening|intro/.test(k)) return mk('historia', tr('Cena já vista: ','Scene seen: ') + clean(rest, /cutscene|scene|_dialog/g), tr('Sim = a cena já aconteceu.','Yes = the scene already happened.'), place, true);
+  return mk('historia', tr('Evento: ','Event: ') + clean(rest, /^$/), tr('Marca algo que já aconteceu na história.','Marks something that already happened in the story.'), place, true);
+}
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function matches(e, q){ if (!q) return true; const d = describe(e.key); return norm(d.t + ' ' + d.h + ' ' + d.place + ' ' + e.key + ' ' + catLabel(d.cat)).includes(q); }
+
+// =====================================================================
+// Trapaças / Cheats
+// =====================================================================
+const foodKeys = () => ITEMS.filter(i => (i.g === 'cons' || i.g === 'ingr') && i.amt && !AMMO.includes(i.amt) && i.amt !== 'amount_elixer').map(i => i.amt);
+const CHEATS = [
+  {ico:'❤️', t:['Vida gigante','Huge health'], d:['999 de vida (≈500 corações), sempre cheia.','999 health (≈500 hearts), always full.'], keys:{_max_life:999,_current_life:999}, need:['_max_life']},
+  {ico:'🛡️', t:['Quase invencível','Almost invincible'], d:['Defesa 999: qualquer golpe tira só ½ coração.','Defense 999: every hit takes only ½ heart.'], keys:{defense:999}, need:['defense']},
+  {ico:'🧪', t:['Reviver sempre','Always revive'], d:['99 elixires. Ao morrer, você revive na hora.','99 elixirs. When you die, you revive on the spot.'], keys:{possession_elixer:1,amount_elixer:99,elixer_restoration_level:24}},
+  {ico:'✨', t:['Magia infinita','Infinite magic'], d:['1000 de magia (10x o normal), e ela se recupera sozinha.','1000 magic (10x normal), and it refills by itself.'], keys:{_max_magic:1000,_current_magic:1000}, need:['_max_magic']},
+  {ico:'💰', t:['Dinheiro máximo','Max money'], d:['9999 moedas.','9999 coins.'], keys:{_max_money:9999,_current_money:9999}, need:['_current_money']},
+  {ico:'🏹', t:['Munição cheia','Full ammo'], d:['100 flechas e 99 bombas (se você já tiver arco/bombas).','100 arrows and 99 bombs (if you already have the bow/bombs).'],
+    apply:on => AMMO.forEach(k => { if (on){ if (get(k) !== undefined) set(k, MAXN[k]); } else restore(k); }),
+    isOn:() => AMMO.some(k => get(k) !== undefined) && AMMO.every(k => get(k) === undefined || get(k) === MAXN[k]),
+    avail:() => AMMO.some(k => get(k) !== undefined)},
+  {ico:'⚗️', t:['Poções e comida','Potions and food'], d:['99 de cada poção, comida e ingrediente que você já tem.','99 of every potion, food and ingredient you already have.'],
+    apply:on => foodKeys().forEach(k => { if (on){ if (get(k) !== undefined) set(k, 99); } else restore(k); }),
+    isOn:() => { const l = foodKeys().filter(k => get(k) !== undefined); return l.length > 0 && l.every(k => get(k) === 99); },
+    avail:() => foodKeys().some(k => get(k) !== undefined)},
+  {ico:'⚔️', t:['Golpe fatal','One-hit kills'], d:['Espada, arco, bombas e fogo com dano 50 ou mais.','Sword, bow, bombs and fire deal 50+ damage.'], keys:{sword_damage:50,bow_damage:50,bomb_damage:100,fire_damage:50}, need:['sword_damage']},
+];
+const cheatOn = c => c.isOn ? c.isOn() : Object.entries(c.keys).every(([k,v]) => get(k) === v);
+const cheatAvail = c => c.avail ? c.avail() : (!c.need || c.need.every(k => get(k) !== undefined));
+function setCheat(c, on){
+  if (c.apply) c.apply(on);
+  else Object.entries(c.keys).forEach(([k,v]) => on ? set(k, v) : restore(k));
+  if (get('_current_life') > get('_max_life')) set('_current_life', get('_max_life'));
+}
+function renderCheats(){
+  const box = $('cheats'); box.innerHTML = '';
+  CHEATS.forEach(c => {
+    const avail = cheatAvail(c), on = avail && cheatOn(c);
+    const d = document.createElement('div'); d.className = 'cheat' + (on ? ' on' : '') + (avail ? '' : ' na');
+    d.innerHTML = '<div class="ico"></div><div><b></b><span></span></div><div class="state"></div>';
+    d.querySelector('.ico').textContent = c.ico;
+    d.querySelector('b').textContent = tr(c.t[0], c.t[1]);
+    d.querySelector('span').textContent = avail ? tr(c.d[0], c.d[1]) : T('notAvail');
+    d.querySelector('.state').textContent = avail ? (on ? T('on') : T('off')) : '';
+    if (avail) d.onclick = () => { setCheat(c, !cheatOn(c)); refresh(); };
+    box.appendChild(d);
+  });
+}
+$('godmode').onclick = () => { CHEATS.forEach(c => { if (cheatAvail(c)) setCheat(c, true); }); refresh(); showMsg('outMsg','ok',T('godDone')); };
+
+// =====================================================================
+// Abas / Tabs
+// =====================================================================
+function numInput(value, onSet){
+  const inp = document.createElement('input'); inp.type = 'number'; inp.min = 0; inp.value = value;
+  inp.onchange = () => { const n = Math.max(0, Math.floor(Number(inp.value) || 0)); onSet(n); refresh(); };
+  return inp;
+}
+function card(name, desc, cls){
+  const d = document.createElement('div'); d.className = 'item' + cls;
+  d.innerHTML = '<div class="txt"><b></b><span></span></div>';
+  d.querySelector('b').textContent = name; d.querySelector('span').textContent = desc;
+  return d;
+}
+function renderStatus(){
+  const box = $('statusList'); box.innerHTML = '';
+  Object.keys(STATUS).forEach(k => {
+    if (get(k) === undefined) return;
+    const d = card(stName(k), stDesc(k), changed(find(k)) ? ' changed' : '');
+    d.appendChild(numInput(get(k), n => set(k, n))); box.appendChild(d);
+  });
+}
+function renderItems(){
+  const q = norm($('itemSearch').value.trim());
+  const wrap = $('itemGroups'); wrap.innerHTML = '';
+  Object.keys(GROUPS).forEach(g => {
+    const list = ITEMS.filter(i => i.g === g && (!q || norm(itName(i) + ' ' + i.id).includes(q)));
+    if (!list.length) return;
+    const h = document.createElement('h3'); h.textContent = tr(GROUPS[g][0], GROUPS[g][1]); wrap.appendChild(h);
+    const box = document.createElement('div'); box.className = 'list'; wrap.appendChild(box);
+    list.forEach(it => {
+      const has = !!get(it.poss) || (it.amt && get(it.amt) > 0);
+      const ch = (find(it.poss) && changed(find(it.poss))) || (it.amt && find(it.amt) && changed(find(it.amt)));
+      const d = card(itName(it), itDesc(it), (has ? '' : ' missing') + (ch ? ' changed' : ''));
+      if (it.amt){
+        d.appendChild(numInput(get(it.amt) || 0, n => { set(it.amt, n); if (n > 0 && !get(it.poss)) set(it.poss, 1); }));
+      } else {
+        const t = document.createElement('input'); t.type = 'checkbox'; t.className = 'toggle'; t.checked = !!get(it.poss); t.title = T('ownTitle');
+        t.onchange = () => {
+          const e = find(it.poss);
+          set(it.poss, t.checked ? ((e && e.orig) || 1) : 0);
+          if (it.id === 'flippers') set('_ability_swim', t.checked ? 1 : 0);
+          refresh();
+        };
+        d.appendChild(t);
+      }
+      box.appendChild(d);
+    });
+  });
+}
+function makeRow(e, showPlace){
+  const d = describe(e.key);
+  const row = document.createElement('div'); row.className = 'vrow' + (changed(e) ? ' changed' : '');
+  const txt = document.createElement('div'); txt.className = 'txt';
+  const b = document.createElement('b'); b.textContent = d.t; txt.appendChild(b);
+  if (d.place && showPlace){ const p = document.createElement('span'); p.className = 'place'; p.textContent = '📍 ' + d.place; txt.appendChild(p); }
+  if (d.h){ const h = document.createElement('span'); h.className = 'hint'; h.textContent = d.h; txt.appendChild(h); }
+  const tech = document.createElement('span'); tech.className = 'tech'; tech.textContent = e.key; txt.appendChild(tech);
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  const asToggle = e.type === 'boolean' || (d.bool01 && e.type === 'number' && [0,1,undefined].includes(e.orig) && [0,1].includes(e.value));
+  if (asToggle){
+    const yn = document.createElement('span'); yn.className = 'yn'; yn.textContent = e.value ? T('yes') : T('no');
+    const tg = document.createElement('input'); tg.type = 'checkbox'; tg.className = 'toggle'; tg.checked = !!e.value;
+    tg.onchange = () => { e.value = e.type === 'boolean' ? tg.checked : (tg.checked ? 1 : 0); refresh(); };
+    ctl.append(yn, tg);
+  } else if (e.type === 'number'){
+    const inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.value = e.value;
+    inp.onchange = () => { const n = Number(inp.value); if (inp.value !== '' && isFinite(n)){ e.value = n; refresh(); } };
+    ctl.appendChild(inp);
+  } else {
+    const inp = document.createElement('input'); inp.type = 'text'; inp.value = e.value;
+    inp.onchange = () => { e.value = inp.value; refresh(); };
+    ctl.appendChild(inp);
+  }
+  row.append(txt, ctl); return row;
+}
+function renderGrouped(container, list, groupOf, order, showPlace){
+  container.innerHTML = '';
+  if (!list.length){ const p = document.createElement('p'); p.className = 'muted'; p.textContent = T('nothing'); container.appendChild(p); return; }
+  const groups = new Map();
+  list.forEach(e => { const g = groupOf(e); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(e); });
+  const keys = [...groups.keys()].sort((a,b) => order ? order.indexOf(a) - order.indexOf(b) : (a === '' ? 1 : b === '' ? -1 : a.localeCompare(b, lang)));
+  keys.forEach(g => {
+    const h = document.createElement('h3'); h.textContent = (g || T('otherPlaces')) + '  (' + groups.get(g).length + ')'; container.appendChild(h);
+    const box = document.createElement('div'); box.className = 'rows'; container.appendChild(box);
+    groups.get(g).sort((a,b) => describe(a.key).t.localeCompare(describe(b.key).t, lang)).forEach(e => box.appendChild(makeRow(e, showPlace)));
+  });
+}
+let worldCat = 'tesouros';
+const WORLD = ['tesouros','portas','chefes','viagem'];
+function renderWorld(){
+  const chips = $('worldChips'); chips.innerHTML = '';
+  WORLD.forEach(c => {
+    const n = vars().filter(e => describe(e.key).cat === c).length;
+    const b = document.createElement('button'); b.className = 'chip' + (c === worldCat ? ' on' : '');
+    b.textContent = catLabel(c) + ' '; const s = document.createElement('small'); s.textContent = n; b.appendChild(s);
+    b.onclick = () => { worldCat = c; renderWorld(); };
+    chips.appendChild(b);
+  });
+  const tip = $('worldTip'); tip.classList.toggle('hidden', worldCat !== 'tesouros'); tip.textContent = T('worldTip');
+  const q = norm($('worldSearch').value.trim());
+  renderGrouped($('worldList'), vars().filter(e => describe(e.key).cat === worldCat && matches(e, q)), e => describe(e.key).place, null, false);
+}
+function renderQuests(){
+  const q = norm($('questSearch').value.trim());
+  const order = [T('questsGroup'), T('storyGroup')];
+  renderGrouped($('questList'), vars().filter(e => ['missoes','historia'].includes(describe(e.key).cat) && matches(e, q)), e => describe(e.key).cat === 'missoes' ? order[0] : order[1], order, true);
+}
+function renderSearch(){
+  const sel = $('catFilter'), cur = sel.value;
+  sel.innerHTML = '';
+  const o0 = document.createElement('option'); o0.value = ''; o0.textContent = T('allCats'); sel.appendChild(o0);
+  Object.keys(CATS).forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = catLabel(c); sel.appendChild(o); });
+  sel.value = cur;
+  const q = norm($('search').value.trim()), all = vars();
+  const list = all.filter(e => (!sel.value || describe(e.key).cat === sel.value) && matches(e, q));
+  $('count').textContent = T('count', {a:list.length, b:all.length});
+  const order = Object.keys(CATS).map(catLabel);
+  renderGrouped($('advList'), list, e => catLabel(describe(e.key).cat), order, true);
+}
+$('itemSearch').addEventListener('input', renderItems);
+$('worldSearch').addEventListener('input', renderWorld);
+$('questSearch').addEventListener('input', renderQuests);
+$('search').addEventListener('input', renderSearch);
+$('catFilter').addEventListener('change', renderSearch);
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  ['cheats','status','items','world','quests','adv'].forEach(id => $('tab-' + id).classList.toggle('hidden', id !== t.dataset.tab));
+});
+
+function refresh(){
+  if (!entries.length) return;
+  renderCheats(); renderStatus(); renderItems(); renderWorld(); renderQuests(); renderSearch();
+  $('out').value = serialize();
+  const n = vars().filter(changed).length;
+  $('changes').textContent = n ? T('changes', {n}) : T('noChanges');
+}
+
+// =====================================================================
+// Idioma / Language
+// =====================================================================
+let guideOpen = false;
+function setGuide(open){
+  guideOpen = open;
+  $('guide').classList.toggle('hidden', !open);
+  $('guideBtn').textContent = T(open ? 'guideClose' : 'guideOpen');
+  $('guideBtn').setAttribute('aria-expanded', open);
+}
+$('guideBtn').onclick = () => setGuide(!guideOpen);
+function applyLang(){
+  document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+  document.title = T('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = T(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = T(el.dataset.i18nPh));
+  $('paste').placeholder = T('pastePh');
+  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  ['loadMsg','outMsg'].forEach(id => $(id).innerHTML = '');
+  setGuide(guideOpen);
+  refresh();
+}
+document.querySelectorAll('.lang button').forEach(b => b.onclick = () => {
+  lang = b.dataset.lang;
+  try { localStorage.setItem('ohse_lang', lang); } catch(_) {}
+  applyLang();
+});
+
+// =====================================================================
+// Carregar / Load
+// =====================================================================
+function showMsg(id, kind, text){ $(id).innerHTML = '<div class="msg ' + kind + '"></div>'; $(id).firstChild.textContent = text; }
+function load(text, name){
+  $('loadMsg').innerHTML = '';
+  if (/[\x00-\x08\x0E-\x1F]/.test(text.slice(0, 2000))){ showMsg('loadMsg','err',T('errBinary')); return; }
+  const {res, n} = parse(text);
+  if (!n){ showMsg('loadMsg','err',T('errEmpty')); return; }
+  entries = res; fileName = name || 'save1.dat';
+  const looksOH = get('sword_damage') !== undefined || get('defense') !== undefined;
+  showMsg('loadMsg', looksOH ? 'ok' : 'warn', T('loaded', {f:name || T('pasted'), n}) + (looksOH ? '' : T('notOH')));
+  $('editor').classList.remove('hidden');
+  setGuide(false);
+  refresh();
+}
+const drop = $('drop'), fileInput = $('file');
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => { const f = fileInput.files[0]; if (f) readFile(f); fileInput.value = ''; };
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) readFile(f); };
+function readFile(f){ const r = new FileReader(); r.onload = () => load(String(r.result), f.name); r.readAsText(f); }
+$('loadPaste').onclick = () => { const t = $('paste').value; if (t.trim()) load(t, null); };
+
+// =====================================================================
+// Exportar / Export
+// =====================================================================
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); return true; } catch(_) { return false; }
+}
+$('copyPath').onclick = async () => {
+  const b = $('copyPath');
+  if (await copyText(SAVE_DIR)){ b.textContent = T('pathCopied'); setTimeout(() => b.textContent = T('copyPath'), 1500); }
+  else { const r = document.createRange(); r.selectNodeContents($('savePath')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+};
+$('copy').onclick = async () => {
+  if (await copyText(serialize())) showMsg('outMsg','ok',T('copied'));
+  else { $('out').parentElement.open = true; $('out').focus(); $('out').select(); showMsg('outMsg','err',T('copyFail')); }
+};
+// Baixar só funciona fora de molduras (ex.: GitHub Pages ou arquivo local)
+let framed = true; try { framed = window.self !== window.top; } catch(_) {}
+if (!framed) $('download').classList.remove('hidden');
+$('download').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([serialize()], {type:'text/plain'}));
+  a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showMsg('outMsg','ok',T('downloaded'));
+};
+$('reset').onclick = () => {
+  entries = entries.filter(e => e.raw !== undefined || e.existed);
+  entries.forEach(e => { if (e.raw === undefined) e.value = e.orig; });
+  refresh(); showMsg('outMsg','ok',T('resetDone'));
+};
+
+applyLang();
+})();
+</script>
+</body>
+</html>
