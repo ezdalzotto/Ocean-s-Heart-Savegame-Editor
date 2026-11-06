@@ -56,4 +56,16 @@ Tudo roda no seu navegador. O save nunca é enviado para lugar nenhum.
 
 ---
 
-*Unofficial fan-made tool by [Ernani Zanandrea Dalzotto](https://github.com/ezdalzotto), not affiliated with Max Mraz or Nordcurrent. Ocean's Heart is © Max Mraz.*
+## License / Licença
+
+**© 2026 Ernani Zanandrea Dalzotto. All rights reserved.**
+
+You are welcome to **use** this editor for free, online or by downloading it, to edit your own saves. No license is granted to copy, modify, redistribute or publish this code or derivative works, in whole or in part, without written permission from the author.
+
+**© 2026 Ernani Zanandrea Dalzotto. Todos os direitos reservados.**
+
+Você pode **usar** este editor de graça, online ou baixando, para editar os seus próprios saves. Não é concedida nenhuma licença para copiar, modificar, redistribuir ou publicar este código ou obras derivadas, no todo ou em parte, sem autorização por escrito do autor.
+
+---
+
+*Unofficial fan-made tool, not affiliated with Max Mraz or Nordcurrent. Ocean's Heart is © Max Mraz.*
